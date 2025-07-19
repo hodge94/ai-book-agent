@@ -81,7 +81,7 @@ if question:
         st.session_state.chat_history.append((question, response.content))
         st.markdown(f"**Answer:** {response.content}")
         if speak:
-            brower_speak(response.content)
+            browser_speak(response.content)
 
 # 📜 Show history
 if st.session_state.chat_history:
