@@ -55,7 +55,7 @@ qa = load_book_qa(BOOK_PATH)
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 🔈 Browser TTS
+# 🔈 Text-to-Speech (Browser-safe version)
 def browser_speak(text):
     js_code = f"""
     <script>
@@ -68,7 +68,10 @@ def browser_speak(text):
 # 🔊 Speak checkbox
 speak = st.checkbox("🔊 Speak the answer")
 
-# 💬 Input at bottom
+# 🧠 Chat container rendered ABOVE input
+chat_container = st.container()
+
+# 💬 Input stays at bottom
 with st.container():
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input(
@@ -82,14 +85,17 @@ with st.container():
     if submitted and user_input:
         with st.spinner("💡 Thinking..."):
             response = qa.invoke({"question": user_input})
-            answer = response.content if hasattr(response, "content") else str(response)
+            answer = response.content
             st.session_state.chat_history.append((user_input, answer))
+
+            # Optionally speak
             if speak:
                 browser_speak(answer)
 
-# 🧠 Display chat history AFTER processing input (so newest is last)
-for q, a in st.session_state.chat_history:
-    with st.chat_message("user"):
-        st.markdown(q)
-    with st.chat_message("assistant"):
-        st.markdown(a)
+# 🧠 Display chat at top of page
+with chat_container:
+    for q, a in st.session_state.chat_history:
+        with st.chat_message("user"):
+            st.markdown(q)
+        with st.chat_message("assistant"):
+            st.markdown(a)
