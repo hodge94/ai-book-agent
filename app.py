@@ -55,7 +55,7 @@ qa = load_book_qa(BOOK_PATH)
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 🔈 Text-to-Speech (Browser-safe version)
+# 🔈 Browser-based speech synthesis
 def browser_speak(text):
     js_code = f"""
     <script>
@@ -69,13 +69,13 @@ def browser_speak(text):
 speak = st.checkbox("🔊 Speak the answer")
 
 # 🧠 Render chat history at the top
-for i, (q, a) in enumerate(st.session_state.chat_history):
+for q, a in st.session_state.chat_history:
     with st.chat_message("user"):
         st.markdown(q)
     with st.chat_message("assistant"):
         st.markdown(a)
 
-# 💬 Input box at the bottom (inside a form)
+# 💬 Chat input box at the bottom
 with st.container():
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input(
@@ -86,11 +86,14 @@ with st.container():
         )
         submitted = st.form_submit_button("Send")
 
-    if submitted and user_input:
+    if submitted and user_input.strip():
         with st.spinner("💡 Thinking..."):
             response = qa.invoke({"question": user_input})
             answer = response.content
-            st.session_state.chat_history.append((user_input, answer))
+            st.session_state.chat_history.append((user_input.strip(), answer))
             if speak:
                 browser_speak(answer)
 
+        # Optional: Scroll to bottom trick (simulate chat behavior)
+        st.markdown('<a name="bottom"></a>', unsafe_allow_html=True)
+        st.markdown('<script>window.scrollTo(0, document.body.scrollHeight);</script>', unsafe_allow_html=True)
