@@ -6,7 +6,7 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableMap
 from operator import itemgetter
-import pyttsx3
+import streamlit.components.v1 as components
 from PyPDF2 import PdfReader
 
 # 🔐 Load API key from Streamlit Secrets
@@ -62,7 +62,15 @@ def speak_text(text):
 # 💬 Chat memory
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-
+# Brower speaker
+def browser_speak(text):
+    js_code = f"""
+    <scripts>
+    var msg = new SpeechSynthesisUtterance({repr(text)});
+    window.speechSynthesis.speak(msg);
+    </script>
+    """
+    components.html(js_code)
 # 💬 UI
 question = st.text_input("💬 Ask me anything about the book:")
 speak = st.checkbox("🔊 Speak the answer")
@@ -73,7 +81,7 @@ if question:
         st.session_state.chat_history.append((question, response.content))
         st.markdown(f"**Answer:** {response.content}")
         if speak:
-            speak_text(response.content)
+            brower_speak(response.content)
 
 # 📜 Show history
 if st.session_state.chat_history:
