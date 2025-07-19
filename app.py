@@ -65,37 +65,32 @@ def browser_speak(text):
     """
     components.html(js_code, height=0)
 
-# 🧠 Display chat history (latest at bottom, like ChatGPT)
+# 🔊 Speak checkbox
+speak = st.checkbox("🔊 Speak the answer")
+
+# 🧠 Render chat history at the top
 for i, (q, a) in enumerate(st.session_state.chat_history):
     with st.chat_message("user"):
         st.markdown(q)
     with st.chat_message("assistant"):
         st.markdown(a)
 
-# 🔊 Speak checkbox
-speak = st.checkbox("🔊 Speak the answer")
-
-# 💬 Input at bottom (ChatGPT style)
+# 💬 Input box at the bottom (inside a form)
 with st.container():
     with st.form("chat_form", clear_on_submit=True):
-        user_input = st.text_input("Ask your question:", key="chat_input", label_visibility="collapsed", placeholder="Type your question here...")
+        user_input = st.text_input(
+            "Ask your question:",
+            key="chat_input",
+            label_visibility="collapsed",
+            placeholder="Type your question here..."
+        )
         submitted = st.form_submit_button("Send")
 
-if submitted and user_input:
-    with st.spinner("💡 Thinking..."):
-        response = qa.invoke({"question": user_input})
-        answer = response.content
-
-        # Save message
-        st.session_state.chat_history.append((user_input, answer))
-
-        # Immediately display latest response
-        with st.chat_message("user"):
-            st.markdown(user_input)
-        with st.chat_message("assistant"):
-            st.markdown(answer)
-
-        if speak:
-            browser_speak(answer)
-
+    if submitted and user_input:
+        with st.spinner("💡 Thinking..."):
+            response = qa.invoke({"question": user_input})
+            answer = response.content
+            st.session_state.chat_history.append((user_input, answer))
+            if speak:
+                browser_speak(answer)
 
