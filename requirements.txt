@@ -2,10 +2,11 @@ streamlit
 openai
 langchain==0.1.14
 langchain-core==0.1.40
-langchain-community==0.0.21
+langchain-community==0.0.33
 langchain-openai==0.1.7
 langchain-text-splitters==0.0.1
 python-dotenv
 PyPDF2
 faiss-cpu
 pyttsx3
+
