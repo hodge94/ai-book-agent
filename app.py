@@ -6,8 +6,8 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableMap
 from operator import itemgetter
-import streamlit.components.v1 as components
 from PyPDF2 import PdfReader
+import streamlit.components.v1 as components
 
 # 🔐 Load API key from Streamlit Secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
@@ -15,7 +15,6 @@ openai_api_key = st.secrets["OPENAI_API_KEY"]
 # 🔐 Token-Protected access
 SECRET_TOKEN = "yalistudy2025"
 token = st.query_params.get("token", "").strip()
-
 if token != SECRET_TOKEN:
     st.error("❌ Access Denied. You need a valid link to access this app.")
     st.stop()
@@ -39,7 +38,6 @@ def load_book_qa(book_path):
     prompt = PromptTemplate.from_template(
         "Use the context below to answer the question:\n\n{context}\n\nQuestion: {question}"
     )
-
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0, openai_api_key=openai_api_key)
 
     chain = RunnableMap({
@@ -49,45 +47,55 @@ def load_book_qa(book_path):
 
     return chain
 
-# 📖 Set book path
+# 📖 Load QA system
 BOOK_PATH = "books/CISA Official Review Manual, 28th Edition[1].pdf"
 qa = load_book_qa(BOOK_PATH)
 
-# 🗣 Text-to-speech
-def speak_text(text):
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
-
-# 💬 Chat memory
+# 💬 Chat history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-# Brower speaker
+
+# 🔈 Text-to-Speech (Browser-safe version)
 def browser_speak(text):
     js_code = f"""
-    <scripts>
+    <script>
     var msg = new SpeechSynthesisUtterance({repr(text)});
     window.speechSynthesis.speak(msg);
     </script>
     """
-    st.components.v1.html(js_code, height=0)
-# 💬 UI
-question = st.text_input("💬 Ask me anything about the book:")
+    components.html(js_code, height=0)
+
+# 🧠 Display chat history (latest at bottom, like ChatGPT)
+for i, (q, a) in enumerate(st.session_state.chat_history):
+    with st.chat_message("user"):
+        st.markdown(q)
+    with st.chat_message("assistant"):
+        st.markdown(a)
+
+# 🔊 Speak checkbox
 speak = st.checkbox("🔊 Speak the answer")
 
-if question:
-    with st.spinner("💡 Thinking..."):
-        response = qa.invoke({"question": question})
-        st.session_state.chat_history.append((question, response.content))
-        st.markdown(f"**Answer:** {response.content}")
-        if speak:
-            browser_speak(response.content)
+# 💬 Input at bottom (ChatGPT style)
+with st.container():
+    with st.form("chat_form", clear_on_submit=True):
+        user_input = st.text_input("Ask your question:", key="chat_input", label_visibility="collapsed", placeholder="Type your question here...")
+        submitted = st.form_submit_button("Send")
 
-# 📜 Show history
-if st.session_state.chat_history:
-    st.markdown("---")
-    st.markdown("### 🧠 Chat History")
-    for i, (q, a) in enumerate(st.session_state.chat_history[::-1], 1):
-        st.markdown(f"**Q{i}:** {q}")
-        st.markdown(f"**A{i}:** {a}")
+if submitted and user_input:
+    with st.spinner("💡 Thinking..."):
+        response = qa.invoke({"question": user_input})
+        answer = response.content
+
+        # Save message
+        st.session_state.chat_history.append((user_input, answer))
+
+        # Immediately display latest response
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        with st.chat_message("assistant"):
+            st.markdown(answer)
+
+        if speak:
+            browser_speak(answer)
+
 
