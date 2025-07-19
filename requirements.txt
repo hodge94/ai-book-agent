@@ -1,12 +1,12 @@
-streamlit
-openai
+streamlit==1.47.0
+openai==1.17.0
 langchain==0.1.14
-langchain-core==0.1.40
-langchain-community==0.0.33
+langchain-core==0.1.43
+langchain-community==0.0.30
 langchain-openai==0.1.7
 langchain-text-splitters==0.0.1
-python-dotenv
-PyPDF2
-faiss-cpu
-pyttsx3
+python-dotenv==1.0.1
+PyPDF2==3.0.1
+faiss-cpu==1.7.4
+pyttsx3==2.90
 
