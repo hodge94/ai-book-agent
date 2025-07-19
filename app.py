@@ -7,7 +7,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableMap
 from operator import itemgetter
 from PyPDF2 import PdfReader
-import streamlit.components.v1 as components
 
 # 🔐 Load API key from Streamlit Secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
@@ -15,6 +14,7 @@ openai_api_key = st.secrets["OPENAI_API_KEY"]
 # 🔐 Token-Protected access
 SECRET_TOKEN = "yalistudy2025"
 token = st.query_params.get("token", "").strip()
+
 if token != SECRET_TOKEN:
     st.error("❌ Access Denied. You need a valid link to access this app.")
     st.stop()
@@ -38,6 +38,7 @@ def load_book_qa(book_path):
     prompt = PromptTemplate.from_template(
         "Use the context below to answer the question:\n\n{context}\n\nQuestion: {question}"
     )
+
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0, openai_api_key=openai_api_key)
 
     chain = RunnableMap({
@@ -47,15 +48,15 @@ def load_book_qa(book_path):
 
     return chain
 
-# 📖 Load QA system
+# 📖 Set book path
 BOOK_PATH = "books/CISA Official Review Manual, 28th Edition[1].pdf"
 qa = load_book_qa(BOOK_PATH)
 
-# 💬 Chat history
+# 🧠 Store chat history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 🔈 Browser-based speech synthesis
+# 🔊 Optional browser speech synthesis
 def browser_speak(text):
     js_code = f"""
     <script>
@@ -63,19 +64,19 @@ def browser_speak(text):
     window.speechSynthesis.speak(msg);
     </script>
     """
-    components.html(js_code, height=0)
+    st.components.v1.html(js_code, height=0)
 
-# 🔊 Speak checkbox
+# 🔈 Speak toggle
 speak = st.checkbox("🔊 Speak the answer")
 
 # 🧠 Render chat history at the top
-for q, a in st.session_state.chat_history:
+for i, (q, a) in enumerate(st.session_state.chat_history):
     with st.chat_message("user"):
         st.markdown(q)
     with st.chat_message("assistant"):
         st.markdown(a)
 
-# 💬 Chat input box at the bottom
+# 💬 Input box at the bottom (inside a form)
 with st.container():
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input(
@@ -86,14 +87,10 @@ with st.container():
         )
         submitted = st.form_submit_button("Send")
 
-    if submitted and user_input.strip():
+    if submitted and user_input:
         with st.spinner("💡 Thinking..."):
             response = qa.invoke({"question": user_input})
             answer = response.content
-            st.session_state.chat_history.append((user_input.strip(), answer))
+            st.session_state.chat_history.append((user_input, answer))
             if speak:
                 browser_speak(answer)
-
-        # Optional: Scroll to bottom trick (simulate chat behavior)
-        st.markdown('<a name="bottom"></a>', unsafe_allow_html=True)
-        st.markdown('<script>window.scrollTo(0, document.body.scrollHeight);</script>', unsafe_allow_html=True)
