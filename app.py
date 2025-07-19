@@ -70,7 +70,7 @@ def browser_speak(text):
     window.speechSynthesis.speak(msg);
     </script>
     """
-    components.html(js_code)
+    st.components.v1.html(js_code, height=0, unsafe_allow_html=True)
 # 💬 UI
 question = st.text_input("💬 Ask me anything about the book:")
 speak = st.checkbox("🔊 Speak the answer")
